@@ -1,3 +1,7 @@
+import Data
+import Web
+import bst
+
 class Player:
     """
     Represents a Player
@@ -9,7 +13,7 @@ class Player:
         name (str): Steam username of player
         steamID (str): Player's steamID (also known as Community ID)
         queuedWith (set): Set of players that This player is queued with
-        rank (int): Player's matchmaking rank
+        rank (str): Player's matchmaking rank
         faceIt (int): Player's FaceIt level (if applicable)
         wr (float): Player's matchmaking win rate
     """
@@ -25,17 +29,19 @@ class Player:
         self.name = name
         self.steamID = steamID
         self.queuedWith = set()
-        self.rank = -1
+        self.rank = ""
         self.faceIt = -1
         self.wr = -1.0
+        self.associatedPlayers = None
+        self.steamAvatar = ""
 
     def __str__(self):
         """
         Allows class to be represented as a string.
 
-        :return (str): Name and steamID of player in the following format "name:steamID"
+        :return (str): steamID of player
         """
-        return self.name + ":" + str(self.steamID)
+        return str(self.steamID)
 
     def GetQueued(self):
         """
@@ -56,4 +62,28 @@ class Player:
         if player not in self.queuedWith:
             self.queuedWith.add(player)
             player.AddFriend(self)
+        pass
+
+    def LoadData(self):
+        """
+        Gets Player's data from sources, cleans up the data, and adds that data to the Player object
+
+        :return: None
+        """
+        myData = Web.ScrapeData(str(self.steamID))
+        myData = Data.CleanUpData(myData)
+        self.rank = myData[0]
+        self.faceIt = myData[1]
+        self.wr = myData[2]
+        self.associatedPlayers = myData[3]
+        self.steamAvatar = myData[4]
+
+    def LoadFriendsInGame(self, players):
+        """
+
+        :param players (list):
+        :return: None
+        """
+
+        #For every player in players: if self.associatedplayers.search(str(player)) != root then self.AddFriend(player)
         pass

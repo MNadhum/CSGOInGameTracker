@@ -1,5 +1,6 @@
 import os
-import Player
+from Player import Player
+import bst
 
 def UniqueToCommunity(uniqueid):
     """
@@ -48,7 +49,7 @@ def LoadFileName(path):
 
     return file
 
-def GetPlayerData(fileName):
+def GetPlayers(fileName):
     """
     Gathers player's data from the console dump text file.
 
@@ -85,13 +86,13 @@ def GetPlayerData(fileName):
 
     # Convert the uniqueids of all players into steamIDs
     for val in playerData.values():
-        val[1] = UniqueToCommunity(val[1])
+        val[1] = str(UniqueToCommunity(val[1]))
 
     return playerData
 
 def CreatePlayers(playerData):
     """
-    Creates Player objects for each players in the game using the Player class
+    Creates Player objects for each player in the game using the Player class
 
     :param playerData (dict): Dictionary containing each player's name and steamID
     :return (list): List of Player objects (each representing one player in the game)
@@ -104,8 +105,48 @@ def CreatePlayers(playerData):
 
     return players
 
-f = "C:\SteamLibrary\steamapps\common\Counter-Strike Global Offensive\csgo\condump000.txt"
+def CleanUpData(rawData):
+    """
+    Cleans up the raw data from the sites into a specific format to be used by Player.LoadData function
+
+    :param rawData (string): raw player data scraped from sources
+    :return (string): Cleaned up version of playerData
+    """
+    playerData = ["", -1, -1, None]
+    """  
+    OUTPUT/RETURN FORMAT:
+        playerData[0] = rank
+        playerData[1] = faceIt
+        playerData[2] = wr
+        playerData[3] = bst of associatedPlayers
+        playerData[4] = steamAvatar
+     
+    rawData[0] gives the following:
+        playerData[0]/rank - found in "Games  ⮕ 0 ⮕ skilllevel"
+        playerData[2]/wr - iterate through "games ⮕ i ⮕ matchResult" and add up win, tie, loss and calculate wr
+        playerData[3]/associatedPlayers - found in "teammates ⮕ i ⮕ steam64Id"
+        playerData[4]/steamAvatarSteam - found in "meta ⮕ steamAvatarUrl"
+
+    rawData[1] gives the following:
+       playerData[3]/associatedPlayers - if "player ⮕ games" > 3, then add to associatedPlayers
+     
+    rawData[2] gives the following:
+        playerData[1]/faceIt - "payload ⮕ players ⮕ results ⮕ (if not NONE) ⮕ 0 ⮕ games ⮕ 0 ⮕ skill_level"
+    
+    rawData[3] gives the following information:
+        playerData[3]/associatedPlayers - "friendslist ⮕ friends ⮕ steamid"
+     """
 
 
+    return playerData
+
+def ExportJSON(players):
+    """
+    Export relevant data of all players into a JSON file
+
+    :param players (list): List of Player objects, representing each player in the game
+    :return: None
+    """
+    pass
 
 
