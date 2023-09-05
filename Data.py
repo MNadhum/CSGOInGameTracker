@@ -1,6 +1,8 @@
 import os
 from Player import Player
+import Web
 import bst
+import json
 
 def UniqueToCommunity(uniqueid):
     """
@@ -45,7 +47,7 @@ def LoadFileName(path):
                 dumpNum = thisNum
                 dumpNumString = fileName
 
-    file = path + dumpNumString
+    file = path + '/' + dumpNumString
 
     return file
 
@@ -88,6 +90,7 @@ def GetPlayers(fileName):
     for val in playerData.values():
         val[1] = str(UniqueToCommunity(val[1]))
 
+
     return playerData
 
 def CreatePlayers(playerData):
@@ -97,12 +100,10 @@ def CreatePlayers(playerData):
     :param playerData (dict): Dictionary containing each player's name and steamID
     :return (list): List of Player objects (each representing one player in the game)
     """
-
     players = []
     for user in playerData.values():
         thisPlayer = Player(user[0], user[1])
         players.append(thisPlayer)
-
     return players
 
 def CleanUpData(rawData):
@@ -112,7 +113,7 @@ def CleanUpData(rawData):
     :param rawData (string): raw player data scraped from sources
     :return (string): Cleaned up version of playerData
     """
-    playerData = ["", -1, -1, None]
+
     """  
     OUTPUT/RETURN FORMAT:
         playerData[0] = rank
@@ -120,25 +121,93 @@ def CleanUpData(rawData):
         playerData[2] = wr
         playerData[3] = bst of associatedPlayers
         playerData[4] = steamAvatar
-     
-    rawData[0] gives the following:
-        playerData[0]/rank - found in "Games  ⮕ 0 ⮕ skilllevel"
-        playerData[2]/wr - iterate through "games ⮕ i ⮕ matchResult" and add up win, tie, loss and calculate wr
-        playerData[3]/associatedPlayers - found in "teammates ⮕ i ⮕ steam64Id"
-        playerData[4]/steamAvatarSteam - found in "meta ⮕ steamAvatarUrl"
-
-    rawData[1] gives the following:
-       playerData[3]/associatedPlayers - if "player ⮕ games" > 3, then add to associatedPlayers
-     
-    rawData[2] gives the following:
-        playerData[1]/faceIt - "payload ⮕ players ⮕ results ⮕ (if not NONE) ⮕ 0 ⮕ games ⮕ 0 ⮕ skill_level"
-    
-    rawData[3] gives the following information:
-        playerData[3]/associatedPlayers - "friendslist ⮕ friends ⮕ steamid"
      """
+    playerData = ["", -1, -1, None, ""]
 
+    JSON1 = rawData[0]
+    JSON2 = rawData[1]
+    JSON3 = rawData[2]
+    JSON4 = rawData[3]
+
+
+    ranksFile = open("extra/ranks.txt", "r", encoding="utf8")
+    ranksJSON = json.load(ranksFile)
+    ranksFile.close()
+
+    # Count the W/L/T outcomes of the player's games and get name of the
+    # rank based on its number (0 = unranked, 18 = Global Elite)
+    win = 0
+    loss = 0
+    tie = 0
+    try:
+        for gameNum in range(len(JSON1["games"])):
+            gameSource = JSON1["games"][gameNum]["dataSource"]
+            gameRank = JSON1["games"][gameNum]["skillLevel"]
+            # If the game is a matchmaking game (not FaceIt), and the player had a rank in this game:
+            if playerData[0] == "" and gameSource == "matchmaking" and gameRank is not None:
+                playerData[0] = ranksJSON[str(JSON1["games"][gameNum]["skillLevel"])]
+            gameResult = JSON1["games"][gameNum]["matchResult"]
+            if gameResult == "win":
+                win += 1
+            elif gameResult == "loss":
+                loss += 1
+            else:
+                tie += 1
+    except:
+        pass
+    playerData[2] = [win, loss, tie]
+
+    # Populate BST with IDs of players associated with THIS player using Source1
+    try:
+        for playerNum in range(len(JSON1["teammates"])):
+            id = int(JSON1["teammates"][playerNum]["steam64Id"])
+            if playerData[3] == None:
+                playerNode = bst.Node(id)
+                playerData[3] = playerNode
+            else:
+                bst.insert(playerData[3], id)
+    except:
+        pass
+
+    # Get link to player's Steam profile picture
+    try:
+        playerData[4] = JSON1["meta"]["steamAvatarUrl"]
+    except:
+        pass
+
+    # Populate BST with IDs of players associated with THIS player using Source2
+    try:
+        for playerNum in range(len(JSON2["players"])):
+            if int(JSON2["players"][0]["stats"]["games"]) > 3:
+                id = int(JSON2["players"][playerNum]["steam_id"])
+                if playerData[3] == None:
+                    playerNode = bst.Node(id)
+                else:
+                    bst.insert(playerData[3], id)
+    except:
+        pass
+
+    # Gets FaceIT level of player
+    try:
+        if len(JSON3["payload"]["players"]) > 0:
+            playerData[1] = JSON3["payload"]["players"]["results"][0]["games"][0]["skill_level"]
+    except:
+        pass
+
+    try:
+        for friendNum in range(len(JSON4["friendslist"]["friends"])):
+            id = int(JSON4["friendslist"]["friends"][friendNum]["steamid"])
+            if playerData[3] is None:
+                playerNode = bst.Node(id)
+                playerData[3] = playerNode
+            else:
+                bst.insert(playerData[3], id)
+    except:
+        pass
 
     return playerData
+
+
 
 def ExportJSON(players):
     """

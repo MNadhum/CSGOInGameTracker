@@ -31,7 +31,7 @@ class Player:
         self.queuedWith = set()
         self.rank = ""
         self.faceIt = -1
-        self.wr = -1.0
+        self.wr = [-1,-1,-1]
         self.associatedPlayers = None
         self.steamAvatar = ""
 
@@ -59,10 +59,12 @@ class Player:
         :param player (Player): Player object representing the player that this player is queued with
         :return: None
         """
+
         if player not in self.queuedWith:
             self.queuedWith.add(player)
             player.AddFriend(self)
         pass
+
 
     def LoadData(self):
         """
@@ -70,20 +72,26 @@ class Player:
 
         :return: None
         """
-        myData = Web.ScrapeData(str(self.steamID))
-        myData = Data.CleanUpData(myData)
+
+        scraped = Web.ScrapeData(str(self.steamID))
+        myData = Data.CleanUpData(scraped)
         self.rank = myData[0]
         self.faceIt = myData[1]
         self.wr = myData[2]
         self.associatedPlayers = myData[3]
         self.steamAvatar = myData[4]
 
+
     def LoadFriendsInGame(self, players):
         """
-
-        :param players (list):
+        Iterates through the players in this game, and figures out who each player is queued with
+        :param players (list): List of player objects of players in the game
         :return: None
         """
 
-        #For every player in players: if self.associatedplayers.search(str(player)) != root then self.AddFriend(player)
-        pass
+        for player in players.values():
+            if self != player:
+                foundNode = bst.search(self.associatedPlayers, int(player.steamID))
+                if foundNode != None:
+                    foundPlayer = players[str(foundNode.key)]
+                    self.AddFriend(foundPlayer)
