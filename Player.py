@@ -85,6 +85,7 @@ class Player:
     def LoadFriendsInGame(self, players):
         """
         Iterates through the players in this game, and figures out who each player is queued with
+
         :param players (list): List of player objects of players in the game
         :return: None
         """
@@ -97,15 +98,24 @@ class Player:
                     self.AddFriend(foundPlayer)
 
     def GetDict(self):
+        """
+        Returns Player object as a dictionary for easy conversion to JSON
+
+        :return: None
+        """
+
         playerDict = {}
         playerDict["name"] = self.name
         playerDict["steamID"] = self.steamID
+
         queuedDict = {}
         for player in self.queuedWith:
             queuedDict["id"] = str(player)
+
         playerDict["queuedWith"] = queuedDict
         playerDict["rank"] = self.rank
         playerDict["faceIT"] = self.faceIt
         playerDict["winRate"] = self.winRate
         playerDict["avatar"] = self.steamAvatar
+
         return playerDict
