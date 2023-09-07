@@ -143,19 +143,31 @@ def CleanUpData(rawData):
         for gameNum in range(len(JSON1["games"])):
             gameSource = JSON1["games"][gameNum]["dataSource"]
             gameRank = JSON1["games"][gameNum]["skillLevel"]
-            # If the game is a matchmaking game (not FaceIt), and the player had a rank in this game:
-            if playerData[0] == "" and gameSource == "matchmaking" and gameRank is not None:
-                playerData[0] = ranksJSON[str(JSON1["games"][gameNum]["skillLevel"])]
-            gameResult = JSON1["games"][gameNum]["matchResult"]
-            if gameResult == "win":
-                win += 1
-            elif gameResult == "loss":
-                loss += 1
+            cs2Game = JSON1["games"][gameNum]["isCs2"]
+            teamCount = len(JSON1["games"][gameNum]["ownTeamSteam64Ids"])
+            countable = False
+
+            if (gameSource == "matchmaking") and not cs2Game  and (teamCount > 2):
+                countable = True
             else:
-                tie += 1
+                countable = False
+
+            # If the game is a matchmaking game (not FaceIt), and the player had a rank in this game:
+            if countable:
+                if playerData[0] == "" and gameRank is not None:
+                    playerData[0] = ranksJSON[str(JSON1["games"][gameNum]["skillLevel"])]
+                gameResult = JSON1["games"][gameNum]["matchResult"]
+                if gameResult == "win":
+                    win += 1
+                elif gameResult == "loss":
+                    loss += 1
+                else:
+                    tie += 1
     except:
         pass
-    playerData[2] = [win, loss, tie]
+    if (win + loss + tie) != 0:
+        wr = (win + ((1/2) * tie)) / (win + loss + tie)
+        playerData[2] = wr
 
     # Populate BST with IDs of players associated with THIS player using Source1
     try:
@@ -182,6 +194,7 @@ def CleanUpData(rawData):
                 id = int(JSON2["players"][playerNum]["steam_id"])
                 if playerData[3] == None:
                     playerNode = bst.Node(id)
+                    playerData[3] = playerNode
                 else:
                     bst.insert(playerData[3], id)
     except:
@@ -216,6 +229,10 @@ def ExportJSON(players):
     :param players (list): List of Player objects, representing each player in the game
     :return: None
     """
-    pass
+    dumpFile = open("out.json", "w")
 
-
+    for player in players:
+        playerDict = player.GetDict()
+        json.dump(playerDict, dumpFile)
+        dumpFile.write("\n -------- \n")
+    dumpFile.close()

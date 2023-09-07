@@ -24,21 +24,7 @@ def main():
     for player in players:
         player.LoadFriendsInGame(playersDict)
 
-    # FOR TESTING
-    for player in players:
-        print(player.name)
-        print(player.steamID)
-        print('[', end="")
-        for p in player.GetQueued():
-            print(p, end = ",")
-        print(']', end = "")
-        print()
-        print(player.rank)
-        print(player.faceIt)
-        print(player.wr)
-        print(player.associatedPlayers)
-        print(player.steamAvatar)
-        print("-------------------------------")
+    Data.ExportJSON(players)
 
 
 

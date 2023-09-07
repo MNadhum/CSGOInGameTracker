@@ -64,6 +64,5 @@ def ScrapeData(player):
 
     data = [info1, info2, info3, info4]
 
-
     return data
 

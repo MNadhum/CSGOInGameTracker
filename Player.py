@@ -31,7 +31,7 @@ class Player:
         self.queuedWith = set()
         self.rank = ""
         self.faceIt = -1
-        self.wr = [-1,-1,-1]
+        self.winRate = -1.0
         self.associatedPlayers = None
         self.steamAvatar = ""
 
@@ -77,7 +77,7 @@ class Player:
         myData = Data.CleanUpData(scraped)
         self.rank = myData[0]
         self.faceIt = myData[1]
-        self.wr = myData[2]
+        self.winRate = myData[2]
         self.associatedPlayers = myData[3]
         self.steamAvatar = myData[4]
 
@@ -95,3 +95,17 @@ class Player:
                 if foundNode != None:
                     foundPlayer = players[str(foundNode.key)]
                     self.AddFriend(foundPlayer)
+
+    def GetDict(self):
+        playerDict = {}
+        playerDict["name"] = self.name
+        playerDict["steamID"] = self.steamID
+        queuedDict = {}
+        for player in self.queuedWith:
+            queuedDict["id"] = str(player)
+        playerDict["queuedWith"] = queuedDict
+        playerDict["rank"] = self.rank
+        playerDict["faceIT"] = self.faceIt
+        playerDict["winRate"] = self.winRate
+        playerDict["avatar"] = self.steamAvatar
+        return playerDict
