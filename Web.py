@@ -1,7 +1,7 @@
 import os
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.common.by import By
+#from selenium import webdriver
+#from selenium.webdriver.chrome.service import Service as ChromeService
+#from selenium.webdriver.common.by import By
 import requests
 import json
 
@@ -27,17 +27,17 @@ def ScrapeData(player):
     """
 
     # Configuring driver for scraping data from site 2
-    driverOptions = webdriver.ChromeOptions()
-    driverOptions.page_load_strategy = 'normal'
-    driverOptions.add_argument("--headless=new")
-    driverOptions.add_argument("--disable-dev-shm-usage")
-    driverOptions.add_argument("--disable-notifications")
-    driverOptions.add_argument("disable-infobars")
+    #driverOptions = webdriver.ChromeOptions()
+    #driverOptions.page_load_strategy = 'normal'
+    #driverOptions.add_argument("--headless=new")
+    #driverOptions.add_argument("--disable-dev-shm-usage")
+    #driverOptions.add_argument("--disable-notifications")
+    #driverOptions.add_argument("disable-infobars")
 
-    driverService = ChromeService(executable_path=PATH)
+    #driverService = ChromeService(executable_path=PATH)
 
-    driver = webdriver.Chrome(service=driverService, options=driverOptions)
-    driver.implicitly_wait(5)
+    #driver = webdriver.Chrome(service=driverService, options=driverOptions)
+    #driver.implicitly_wait(5)
 
 
     url1 = LINK1 + str(player)
@@ -50,11 +50,11 @@ def ScrapeData(player):
     info1 = requestOne.json()
 
 
-    driver.get(url2)
-    requestTwo = driver.find_element(by=By.CSS_SELECTOR, value="body > pre")
-    info2 = requestTwo.text
-    info2 = json.loads(info2)
-
+    #driver.get(url2)
+    #requestTwo = driver.find_element(by=By.CSS_SELECTOR, value="body > pre")
+    #info2 = requestTwo.text
+    #info2 = json.loads(info2)
+    info2 = ""
 
     requestThree = requests.get(url3)
     info3 = requestThree.json()

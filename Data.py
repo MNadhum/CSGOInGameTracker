@@ -173,7 +173,7 @@ def CleanUpData(rawData):
     try:
         for playerNum in range(len(JSON1["teammates"])):
             id = int(JSON1["teammates"][playerNum]["steam64Id"])
-            if playerData[3] == None:
+            if playerData[3] is None:
                 playerNode = bst.Node(id)
                 playerData[3] = playerNode
             else:
@@ -188,17 +188,17 @@ def CleanUpData(rawData):
         pass
 
     # Populate BST with IDs of players associated with THIS player using Source2
-    try:
-        for playerNum in range(len(JSON2["players"])):
-            if int(JSON2["players"][0]["stats"]["games"]) > 3:
-                id = int(JSON2["players"][playerNum]["steam_id"])
-                if playerData[3] == None:
-                    playerNode = bst.Node(id)
-                    playerData[3] = playerNode
-                else:
-                    bst.insert(playerData[3], id)
-    except:
-        pass
+#    try:
+#        for playerNum in range(len(JSON2["players"])):
+#            if int(JSON2["players"][0]["stats"]["games"]) > 3:
+#                id = int(JSON2["players"][playerNum]["steam_id"])
+#                if playerData[3] == None:
+#                    playerNode = bst.Node(id)
+#                    playerData[3] = playerNode
+#                else:
+#                    bst.insert(playerData[3], id)
+#    except:
+#        pass
 
     # Gets FaceIT level of player
     try:
