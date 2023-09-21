@@ -107,9 +107,9 @@ class Player:
 
     def GetDict(self):
         """
-        Returns Player object as a dictionary for easy conversion to JSON
+        Converts Player object to a dictionary for easy conversion to JSON
 
-        :return: None
+        :return: Dictionary containing player information
         """
 
         playerDict = {}
