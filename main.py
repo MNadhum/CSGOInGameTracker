@@ -1,8 +1,5 @@
 import json
 import Data
-import Player
-import os
-import boto3
 
 
 def main(event, context):

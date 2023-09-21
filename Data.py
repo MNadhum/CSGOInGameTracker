@@ -105,7 +105,7 @@ def CleanUpData(rawData):
     JSON4 = rawData[3]
 
 
-    ranksFile = open("ranks.json", "r", encoding="utf8")
+    ranksFile = open("extra/ranks.json", "r", encoding="utf8")
     ranksJSON = json.load(ranksFile)
     ranksFile.close()
 
