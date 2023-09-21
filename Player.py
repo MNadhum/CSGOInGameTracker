@@ -51,6 +51,14 @@ class Player:
         """
         return self.queuedWith
 
+    def GetID(self):
+        """
+        Get the SteamID of this player
+
+        :return (str): SteamID of player
+        """
+        return self.steamID
+
     def AddFriend(self, player):
         """
         Links two Player objects through adding them to each other's queuedWith set, which

@@ -1,33 +1,34 @@
+import json
 import Data
-import Web
 import Player
 import os
+import boto3
 
-CSGOPATH = os.getenv("CONPATH")
 
-def main():
+def main(event, context):
     """
     Main function to set up and run entire program
     :return: None
     """
     playersDict = dict()
-    fileName = Data.LoadFileName(CSGOPATH)
 
-    playersInGame = Data.GetPlayers(fileName)
+    apiInfo = event['body']
+
+    playersInGame = Data.GetPlayers(apiInfo)
     players = Data.CreatePlayers(playersInGame)
 
     for player in players:
         player.LoadData()
-        playersDict[player.steamID] = player
-
+        playersDict[player.GetID()] = player
 
     for player in players:
         player.LoadFriendsInGame(playersDict)
 
-    Data.ExportJSON(players)
+    export = Data.ExportJSON(players)
 
+    response = {
+        "statusCode": 200,
+        "body": json.dumps(export)
+    }
+    return response
 
-
-
-if __name__ == '__main__':
-    main()

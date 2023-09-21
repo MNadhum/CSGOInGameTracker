@@ -1,6 +1,5 @@
 import os
 from Player import Player
-import Web
 import bst
 import json
 
@@ -27,64 +26,40 @@ def UniqueToCommunity(uniqueid):
 
     return communityId
 
-def LoadFileName(path):
+def GetPlayers(apiData):
     """
-    Looks at given path and loads the newest console dump, in order to retrieve players' uniqueid.
+    Gathers player's data from the console dump text, received through GET request.
 
-    :param path (string): CSGO filepath in system
-    :return: None
-    """
-
-    dumpNum = -1
-    dumpNumString = ""
-
-    for fileName in os.listdir(path):
-        # Find the newest condump file
-        # console dumps are saved as condumpX.txt with X starting at 000 and going up
-        if (fileName.startswith("condump")):
-            thisNum = int(fileName[fileName.find('p') + 1:fileName.find('.')])
-            if (thisNum > dumpNum):
-                dumpNum = thisNum
-                dumpNumString = fileName
-
-    file = path + '/' + dumpNumString
-
-    return file
-
-def GetPlayers(fileName):
-    """
-    Gathers player's data from the console dump text file.
-
-    :param fileName (string): Name of condump file to extract data from
+    :param apiData (string): Data from condump
     :return (dict): Dictionary linking player# (0-9) to player data (steamID and name)
     """
 
-    file = open(fileName, "r", encoding="utf8")
     here = False
     count = 0
     playerData = {}
     playerNum = 0
+    apiData = apiData.split('#')
 
-    for line in file:
-        if here:
-            count += 1
-            # The table with player information has 10 rows (one for each player)
-            if 0 < count <= 10:
-                ind1 = line.find('"')
-                ind2 = line.rfind('"')
-                lineS = line.split(" ")
-                # Ensure that player is not a bot, and add player's data to players dict
-                if lineS[2] != "BOT":
-                    lineS = line[ind2:].split(" ")
-                    playerData[playerNum] = [line[ind1 + 1:ind2], lineS[1]]
-                    playerNum += 1
-            else:
-                break
-        # Checks if current line is the header of the table with player information
-        if line == "# userid name uniqueid connected ping loss state rate\n":
-            here = True
-
-    file.close()
+    for line in apiData:
+        if len(line) != 0:
+            line = line.strip()
+            if line == "userid name uniqueid connected ping loss state rate":
+                here = True
+                continue
+            if here:
+                count += 1
+                # The table with player information has 10 rows (one for each player)
+                if 0 < count <= 10:
+                    ind1 = line.find('"')
+                    ind2 = line.rfind('"')
+                    lineS = line.split(" ")
+                    # Ensure that player is not a bot, and add player's data to players dict
+                    if lineS[2] != "BOT":
+                        lineS = line[ind2:].split(" ")
+                        playerData[playerNum] = [line[ind1 + 1:ind2], lineS[1]]
+                        playerNum += 1
+                else:
+                    break
 
     # Convert the uniqueids of all players into steamIDs
     for val in playerData.values():
@@ -114,14 +89,14 @@ def CleanUpData(rawData):
     :return (string): Cleaned up version of playerData
     """
 
-    """  
-    OUTPUT/RETURN FORMAT:
-        playerData[0] = rank
-        playerData[1] = faceIt
-        playerData[2] = wr
-        playerData[3] = bst of associatedPlayers
-        playerData[4] = steamAvatar
-     """
+
+    # OUTPUT/RETURN FORMAT:
+    # playerData[0] = rank
+    # playerData[1] = faceIt
+    # playerData[2] = wr
+    # playerData[3] = bst of associatedPlayers
+    # playerData[4] = steamAvatar
+
     playerData = ["", -1, -1, None, ""]
 
     JSON1 = rawData[0]
@@ -130,7 +105,7 @@ def CleanUpData(rawData):
     JSON4 = rawData[3]
 
 
-    ranksFile = open("extra/ranks.txt", "r", encoding="utf8")
+    ranksFile = open("ranks.json", "r", encoding="utf8")
     ranksJSON = json.load(ranksFile)
     ranksFile.close()
 
@@ -149,8 +124,6 @@ def CleanUpData(rawData):
 
             if (gameSource == "matchmaking") and not cs2Game  and (teamCount > 2):
                 countable = True
-            else:
-                countable = False
 
             # If the game is a matchmaking game (not FaceIt), and the player had a rank in this game:
             if countable:
@@ -165,6 +138,8 @@ def CleanUpData(rawData):
                     tie += 1
     except:
         pass
+
+    # Calculating win rate based on number of WIN, TIE, LOSS games
     if (win + loss + tie) != 0:
         wr = (win + ((1/2) * tie)) / (win + loss + tie)
         playerData[2] = wr
@@ -173,7 +148,7 @@ def CleanUpData(rawData):
     try:
         for playerNum in range(len(JSON1["teammates"])):
             id = int(JSON1["teammates"][playerNum]["steam64Id"])
-            if playerData[3] == None:
+            if playerData[3] is None:
                 playerNode = bst.Node(id)
                 playerData[3] = playerNode
             else:
@@ -184,19 +159,6 @@ def CleanUpData(rawData):
     # Get link to player's Steam profile picture
     try:
         playerData[4] = JSON1["meta"]["steamAvatarUrl"]
-    except:
-        pass
-
-    # Populate BST with IDs of players associated with THIS player using Source2
-    try:
-        for playerNum in range(len(JSON2["players"])):
-            if int(JSON2["players"][0]["stats"]["games"]) > 3:
-                id = int(JSON2["players"][playerNum]["steam_id"])
-                if playerData[3] == None:
-                    playerNode = bst.Node(id)
-                    playerData[3] = playerNode
-                else:
-                    bst.insert(playerData[3], id)
     except:
         pass
 
@@ -224,15 +186,15 @@ def CleanUpData(rawData):
 
 def ExportJSON(players):
     """
-    Export relevant data of all players into a JSON file
+    Export relevant data of all players into a JSON format
 
     :param players (list): List of Player objects, representing each player in the game
-    :return: None
+    :return: Player data in JSON format to be sent back in API response
     """
-    dumpFile = open("out.json", "w")
-
+    exporting = {}
+    playerNum = 0
     for player in players:
         playerDict = player.GetDict()
-        json.dump(playerDict, dumpFile)
-        dumpFile.write("\n -------- \n")
-    dumpFile.close()
+        exporting[playerNum] = playerDict
+        playerNum += 1
+    return exporting
